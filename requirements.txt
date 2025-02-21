@@ -1,0 +1,7 @@
+pyspark
+pandas
+minio
+apache-airflow
+apache-airflow-providers-amazon
+apache-airflow-providers-postgres
+apache-airflow-providers-apache-spark
