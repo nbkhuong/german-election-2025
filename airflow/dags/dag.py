@@ -80,8 +80,7 @@ with DAG(
             task_id=task_id,
             application=spark_job_path,
             conn_id=connection_id, 
-            verbose=True,
-            #dag=dag
+            verbose=True
         )
 
 
