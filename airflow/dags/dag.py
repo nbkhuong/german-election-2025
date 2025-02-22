@@ -6,10 +6,14 @@ import boto3
 import logging
 
 from airflow import DAG
+from airflow.decorators import task
 from airflow.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator   
 
-from german_election_2025.airflow.dags.scripts.util.retrieve_data import DataRetrieverOverAPI
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+
+from scripts.util.retrieve_data import DataRetrieverOverAPI
 
 # Define the logger
 LOGGER = logging.getLogger(__name__)
@@ -28,82 +32,107 @@ S3_CLIENT = boto3.client('s3',
                         )
 LOGGER.info("[DONE] - Connected to Minio")
 
-# Define the default arguments for the DAG
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime(2025, 2, 20),
-    'retries': 1,
-    'retry_delay': timedelta(minutes=30),
-}
 
-# Define the DAG
-dag = DAG(
-    "germany_election_2025",
-    default_args=default_args,
-    description='ETL for German Election Umfrage',
+with DAG(
+    dag_id='germany_election_2025',
+    start_date=datetime(2025, 2, 20),
     schedule=timedelta(days=1),
-)
+    description='Data Lakehouse for German Election Umfrage') as dag:
 
-# Define the tasks
-def extract(**kwargs):
+
+    @task
+    def extract() -> None:
     # Extract data from api
-    dawum_api = DataRetrieverOverAPI(DAWUM_API_URL)
-    json_filenames = ['database.json', 
-                      'parliaments.json', 
-                      'institutes.json', 
-                      'taskers.json', 
-                      'methods.json', 
-                      'parties.json', 
-                      'surveys.json'
-                      ]
-    dawums = [dawum_api.data['Database'], 
-              dawum_api.data['Parliaments'], 
-              dawum_api.data['Institutes'], 
-              dawum_api.data['Taskers'], 
-              dawum_api.data['Methods'], 
-              dawum_api.data['Parties'], 
-              dawum_api.data['Surveys']
-              ]
+        dawum_api = DataRetrieverOverAPI(DAWUM_API_URL)
+        json_filenames = ['database.json', 
+                        'parliaments.json', 
+                        'institutes.json', 
+                        'taskers.json', 
+                        'methods.json', 
+                        'parties.json', 
+                        'surveys.json'
+                        ]
+        dawums = [dawum_api.data['Database'], 
+                dawum_api.data['Parliaments'], 
+                dawum_api.data['Institutes'], 
+                dawum_api.data['Taskers'], 
+                dawum_api.data['Methods'], 
+                dawum_api.data['Parties'], 
+                dawum_api.data['Surveys']
+                ]
+        
+        LOGGER.info("[DONE] - Extracted data from API")
+
+        # Write data to minio's bucket
+        for i, file in enumerate(dawums):
+            data = json.dumps(file, indent=4)   
+            S3_CLIENT.put_object(Bucket="election-data", Key="landing/" + json_filenames[i], Body=data)
+
+        LOGGER.info("[DONE] - Written data to Minio's bucket")
+
+
+    def spark_job(task_id: str, 
+                  spark_job_path: str, 
+                  connection_id: str,
+                  ) -> SparkSubmitOperator:
+        
+        return SparkSubmitOperator(
+            task_id=task_id,
+            application=spark_job_path,
+            conn_id=connection_id, 
+            verbose=True,
+            #dag=dag
+        )
+
+
+    @task
+    def load():
+
+        return 0
+
+
+    @task
+    def transform():
+
+        return 0
     
-    LOGGER.info("[DONE] - Extracted data from API")
+    extract_task = extract()
 
-    # Write data to minio's bucket
-    for i, file in enumerate(dawums):
-        data = json.dumps(file, indent=4)   
-        S3_CLIENT.put_object(Bucket="election-data", Key="landing/" + json_filenames[i], Body=data)
+    spark_task = spark_job(task_id='spark_job_convert_database',  spark_job_path='/data/convert_database.py', connection_id='spark_conn')
 
-    LOGGER.info("[DONE] - Written data to Minio's bucket")
+    load_task = load()
 
-    return 0
+    transform_task = transform()
 
-def load(**kwargs):
-
-    return 0
-
-def transform(**kwargs):
-
-    return 0
+    extract_task >> [load_task, spark_task] >> transform_task
     
 
-# Create the tasks
-extract_task = PythonOperator(
-    task_id='extract',
-    python_callable=extract,
-    dag=dag,
-)
+# # Create the tasks
+# extract_task = PythonOperator(
+#     task_id='extract',
+#     python_callable=extract,
+#     dag=dag,
+# )
 
-transform_task = PythonOperator(
-    task_id='transform',
-    python_callable=transform,
-    dag=dag,
-)
+# spark_job_convert_database = SparkSubmitOperator(
+#         task_id='spark_job_convert_database',
+#         application='/data/convert_database.py',
+#         conn_id='spark_conn', 
+#         verbose=True,
+#         dag=dag
+#     )
 
-load_task = PythonOperator(
-    task_id='load',
-    python_callable=load,
-    dag=dag,
-)
+# transform_task = PythonOperator(
+#     task_id='transform',
+#     python_callable=transform,
+#     dag=dag,
+# )
 
-# Define the task dependencies
-extract_task >> load_task >> transform_task
+# load_task = PythonOperator(
+#     task_id='load',
+#     python_callable=load,
+#     dag=dag,
+# )
+
+# # Define the task dependencies
+# extract_task >> [load_task, spark_job_convert_database] >> transform_task

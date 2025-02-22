@@ -16,10 +16,11 @@ x-airflow-common:
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
 
   volumes:
-    - /Users/nbk/Desktop/certs/german_election_2025/airflow/dags:/opt/airflow/dags
-    - /Users/nbk/Desktop/certs/german_election_2025/airflow/logs:/opt/airflow/logs
-    - /Users/nbk/Desktop/certs/german_election_2025/airflow/config:/opt/airflow/config
-    - /Users/nbk/Desktop/certs/german_election_2025/airflow/plugins:/opt/airflow/plugins
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/config:/opt/airflow/config
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./airflow/dags/scripts/spark_jobs:/data
   user: "${AIRFLOW_UID:-501}:0"
   depends_on:
     &airflow-common-depends-on
@@ -31,7 +32,7 @@ x-airflow-common:
 x-spark-common: &spark-common
   image: bitnami/spark:3.5.4
   volumes:
-    - /Users/nbk/Desktop/certs/german_election_2025/scripts/spark_jobs:/data
+    - ./scripts/spark_jobs:/data
   networks:
     - election-network
 
@@ -47,7 +48,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - /Users/nbk/Desktop/certs/german_election_2025/minio_data:/data
+      - ./minio_data:/data
     command: server --console-address ":9091" /data
     networks:
       - election-network
@@ -109,6 +110,11 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -120,6 +126,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+      spark-master:
+        condition: service_started
 
   airflow-triggerer:
     <<: *airflow-common
