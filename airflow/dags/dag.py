@@ -9,6 +9,8 @@ from airflow import DAG
 from airflow.decorators import task
 from airflow.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator   
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
@@ -92,9 +94,38 @@ with DAG(
 
     @task
     def transform():
-
+ 
         return 0
-    
+
+    @task
+    def create_table():
+        pg_hook = PostgresHook(postgres_conn_id='postgres_conn')
+        conn = pg_hook.get_conn()
+        cursor = conn.cursor()
+        sql = """
+        create schema if not exists election;
+
+        create table if not exists election.orders (
+            name varchar(255),
+            value integer
+        );
+
+        INSERT INTO election.orders (name, value) 
+        VALUES ('Alice', 100), ('Bob', 200);
+
+        select * from election.orders;
+        """
+        cursor.execute(sql)
+
+        conn.commit()
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+            LOGGER.info(row)
+
+        return "Table created"
+
     extract_task = extract()
 
     spark_task = spark_job(task_id='spark_job_convert_database',  spark_job_path='/data/convert_database.py', connection_id='spark_conn')
@@ -103,35 +134,7 @@ with DAG(
 
     transform_task = transform()
 
-    extract_task >> [load_task, spark_task] >> transform_task
+    sql_task = create_table()   
+
+    extract_task >> [load_task, spark_task] >> transform_task >> sql_task
     
-
-# # Create the tasks
-# extract_task = PythonOperator(
-#     task_id='extract',
-#     python_callable=extract,
-#     dag=dag,
-# )
-
-# spark_job_convert_database = SparkSubmitOperator(
-#         task_id='spark_job_convert_database',
-#         application='/data/convert_database.py',
-#         conn_id='spark_conn', 
-#         verbose=True,
-#         dag=dag
-#     )
-
-# transform_task = PythonOperator(
-#     task_id='transform',
-#     python_callable=transform,
-#     dag=dag,
-# )
-
-# load_task = PythonOperator(
-#     task_id='load',
-#     python_callable=load,
-#     dag=dag,
-# )
-
-# # Define the task dependencies
-# extract_task >> [load_task, spark_job_convert_database] >> transform_task

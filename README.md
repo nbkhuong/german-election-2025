@@ -13,3 +13,8 @@ docker build . --tag my_custom_airflow:latest
 {"aws_access_key_id": "gJr1cEsppCZMxxI3FrD7", "aws_secret_access": "JdRNzqBz2UlWRgRUVFgAPZEM8VqOvIwNiuRbTmM6", "endpoint_url": "http://localhost:9091/"}
 
 multistage docker image build
+
+![1740266178957](image/README/1740266178957.png)
+
+
+![1740266215746](image/README/1740266215746.png)
