@@ -1,4 +1,6 @@
 airflow/logs/*
 airflow/dags/__pycache__
 airflow/dags/scripts/__pycache__
+airflow/dags/scripts/utils/__pycache__
+prtotype/__pycache__
 minio_data/*
