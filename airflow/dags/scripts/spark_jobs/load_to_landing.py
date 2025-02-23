@@ -30,6 +30,15 @@ S3_CLIENT = boto3.client('s3',
                          aws_secret_access_key=MINIO_AWS_SECRET_ACCESS_KEY)
 
 
+def write_to_minio_bucket(df, csv_buffer, csv_filename):
+    df = df.toPandas()
+    df.to_csv(csv_buffer, index=False)
+    csv_content = csv_buffer.getvalue()  
+    S3_CLIENT.put_object(Bucket="election-data", 
+                        Key="trusted/" + csv_filename, 
+                        Body=csv_content.encode('utf-8'),
+                        ContentType="text/csv")
+
 def main():
     # Establish spark session
     spark = SparkSession.builder \
@@ -37,71 +46,64 @@ def main():
                         .getOrCreate()
     
     json_filenames = list(map(lambda x: x + ".json", DATA_ENTRIES))
-    dfs = [] # list to store the dataframes
 
     # Load parliaments data
     response = S3_CLIENT.get_object(Bucket="election-data", 
                                     Key="landing/" + json_filenames[1])
-    data = response['Body'].read()
-    json_data = data.decode('utf-8') 
-    json_data = json.loads(json_data)
-    rdd = spark.sparkContext.parallelize(json_data.items())
-    df_parliaments = rdd.map(lambda x: (x[0], x[1]['Name'], x[1]['Shortcut'], x[1]['Election'])).toDF(["parliament_id", "parliament_name", "parliament_shortcut", "parliament_election"])
+    data_parliaments = response['Body'].read()
+    json_data_data_parliaments = json.loads(data_parliaments.decode('utf-8'))
+    rdd_json_data_data_parliaments = spark.sparkContext.parallelize(json_data_data_parliaments.items())
+    df_parliaments = rdd_json_data_data_parliaments.map(lambda x: (x[0], x[1]['Name'], x[1]['Shortcut'], x[1]['Election'])).toDF(["parliament_id", "parliament_name", "parliament_shortcut", "parliament_election"])
     df_parliaments.show()
-    dfs.append(df_parliaments)
+    write_to_minio_bucket(df_parliaments, StringIO(), "parliaments.csv")
 
     # Load institutes data                
     response = S3_CLIENT.get_object(Bucket="election-data", 
                                     Key="landing/" + json_filenames[2])
-    data = response['Body'].read()
-    json_data = data.decode('utf-8') 
-    json_data = json.loads(json_data)
-    rdd = spark.sparkContext.parallelize(json_data.items())
-    df_institutes = rdd.map(lambda x: (x[0], x[1]["Name"])).toDF(["institute_id", "institute_name"])
+    data_institutes = response['Body'].read()
+    json_data_institutes = json.loads(data_institutes.decode('utf-8'))
+    rdd_institutes = spark.sparkContext.parallelize(json_data_institutes.items())
+    df_institutes = rdd_institutes.map(lambda x: (x[0], x[1]["Name"])).toDF(["institute_id", "institute_name"])
     df_institutes.show()
-    dfs.append(df_institutes)
+    write_to_minio_bucket(df_institutes, StringIO(), "institutes.csv")
 
     # Load taskers data
     response = S3_CLIENT.get_object(Bucket="election-data", 
                                     Key="landing/" + json_filenames[3])
-    data = response['Body'].read()
-    json_data = data.decode('utf-8') 
-    json_data = json.loads(json_data)
-    rdd = spark.sparkContext.parallelize(json_data.items())
-    df_taskers = rdd.map(lambda x: (x[0], x[1]["Name"])).toDF(["tasker_id", "tasker_name"])
+    data_taskers = response['Body'].read()
+    json_data_taskers = json.loads(data_taskers.decode('utf-8'))
+    rdd_taskers = spark.sparkContext.parallelize(json_data_taskers.items())
+    df_taskers = rdd_taskers.map(lambda x: (x[0], x[1]["Name"])).toDF(["tasker_id", "tasker_name"])
     df_taskers.show()
-    dfs.append(df_taskers)
+    write_to_minio_bucket(df_taskers, StringIO(), "taskers.csv")
 
     # Load methods data
     response = S3_CLIENT.get_object(Bucket="election-data", 
                                     Key="landing/" + json_filenames[4])
-    data = response['Body'].read()
-    json_data = data.decode('utf-8') 
-    json_data = json.loads(json_data)
-    rdd = spark.sparkContext.parallelize(json_data.items())
-    df_methods = rdd.map(lambda x: (x[0], x[1]["Name"])).toDF(["method_id", "method_name"])
+    data_methods = response['Body'].read()
+    json_data_methods = json.loads(data_methods.decode('utf-8'))
+    rdd_methods = spark.sparkContext.parallelize(json_data_methods.items())
+    df_methods = rdd_methods.map(lambda x: (x[0], x[1]["Name"])).toDF(["method_id", "method_name"])
     df_methods.show()
-    dfs.append(df_methods)
+    write_to_minio_bucket(df_methods, StringIO(), "methods.csv")
 
     # Load parties data
     response = S3_CLIENT.get_object(Bucket="election-data", 
                                     Key="landing/" + json_filenames[5])
-    data = response['Body'].read()
-    json_data = data.decode('utf-8') 
-    json_data = json.loads(json_data)
-    rdd = spark.sparkContext.parallelize(json_data.items())
-    df_parties = rdd.map(lambda x: (x[0], x[1]["Name"], x[1]["Shortcut"])).toDF(["party_id", "party_name", "party_shortcut"])
+    data_parties = response['Body'].read()
+    json_data_parties = json.loads(data_parties.decode('utf-8'))
+    rdd_parties = spark.sparkContext.parallelize(json_data_parties.items())
+    df_parties = rdd_parties.map(lambda x: (x[0], x[1]["Name"], x[1]["Shortcut"])).toDF(["party_id", "party_name", "party_shortcut"])
     df_parties.show()
-    dfs.append(df_parties)
+    write_to_minio_bucket(df_parties, StringIO(), "parties.csv")
 
     # Load surveys data
     response = S3_CLIENT.get_object(Bucket="election-data", 
-                                    Key="landing/" + json_filenames[6])
-    data = response['Body'].read()
-    json_data = data.decode('utf-8') 
-    json_data = json.loads(json_data)
-    rdd = spark.sparkContext.parallelize(json_data.items())
-    df_surveys = rdd.map(lambda x: (x[0], 
+                                    Key="landing/" + "surveys.json")
+    data_surveys = response['Body'].read()
+    json_data_surveys = json.loads(data_surveys.decode('utf-8'))
+    rdd_surveys = spark.sparkContext.parallelize(json_data_surveys.items())
+    df_surveys = rdd_surveys.map(lambda x: (x[0], 
                                     x[1]["Parliament_ID"],
                                     x[1]["Institute_ID"],
                                     x[1]["Tasker_ID"],
@@ -134,20 +136,7 @@ def main():
                                 )
     df_surveys = df_surveys.fillna({"survey_result_by_percent": 0})
     df_surveys.show()
-    dfs.append(df_surveys)
-
-    # Write the data to the trusted zone
-    csv_filenames = list(map(lambda x: x + ".csv", DATA_ENTRIES))
-    csv_buffer = StringIO()
-    for i, df in enumerate(dfs): 
-        if i != 0:
-            df = df.toPandas()
-            df.to_csv(csv_buffer, index=False)
-            csv_content = csv_buffer.getvalue()  
-            S3_CLIENT.put_object(Bucket="election-data", 
-                                Key="trusted/" + csv_filenames[i], 
-                                Body=csv_content.encode('utf-8'),
-                                ContentType="text/csv")
+    write_to_minio_bucket(df_surveys, StringIO(), "surveys.csv")
             
     spark.stop()
 

@@ -6,6 +6,7 @@ import boto3
 import logging
 from dotenv import load_dotenv
 import ast
+from io import StringIO
 
 from airflow import DAG
 from airflow.decorators import task
@@ -76,15 +77,8 @@ with DAG(
             verbose=True
         )
 
-
     @task
-    def load():
-
-        return 0
-
-
-    @task
-    def transform():
+    def transform_request_2():
  
         return 0
 
@@ -117,17 +111,15 @@ with DAG(
 
         return "Table created"
 
-    extract_task = extract()
+    # Define the tasks
+    spark_job_load_to_landing = spark_job(task_id='spark_job_load_to_landing',  
+                                          spark_job_path='/data/load_to_landing.py', 
+                                          connection_id=SPARK_CONN_ID)
+    
+    spark_job_transform_request_1 = spark_job(task_id='spark_job_transform_request_1',
+                                              spark_job_path='/data/transforms_request_1.py',
+                                              connection_id=SPARK_CONN_ID)
 
-    spark_task = spark_job(task_id='spark_job_load_to_landing',  
-                           spark_job_path='/data/load_to_landing.py', 
-                           connection_id=SPARK_CONN_ID)
-
-    load_task = load()
-
-    transform_task = transform()
-
-    sql_task = create_table()   
-
-    extract_task >> [load_task, spark_task] >> transform_task >> sql_task
+    # Execute the tasks
+    extract() >> spark_job_load_to_landing >> [spark_job_transform_request_1, transform_request_2()] >> create_table()
     
