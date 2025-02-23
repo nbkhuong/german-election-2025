@@ -119,8 +119,8 @@ with DAG(
 
     extract_task = extract()
 
-    spark_task = spark_job(task_id='spark_job_convert_database',  
-                           spark_job_path='/data/convert_database.py', 
+    spark_task = spark_job(task_id='spark_job_load_to_landing',  
+                           spark_job_path='/data/load_to_landing.py', 
                            connection_id=SPARK_CONN_ID)
 
     load_task = load()

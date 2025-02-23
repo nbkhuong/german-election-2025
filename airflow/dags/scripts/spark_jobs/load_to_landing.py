@@ -140,13 +140,14 @@ def main():
     csv_filenames = list(map(lambda x: x + ".csv", DATA_ENTRIES))
     csv_buffer = StringIO()
     for i, df in enumerate(dfs): 
-        df = df.toPandas()
-        df.to_csv(csv_buffer, index=False)
-        csv_content = csv_buffer.getvalue()  
-        S3_CLIENT.put_object(Bucket="election-data", 
-                             Key="trusted/" + csv_filenames[i], 
-                             Body=csv_content.encode('utf-8'),
-                             ContentType="text/csv")
+        if i != 0:
+            df = df.toPandas()
+            df.to_csv(csv_buffer, index=False)
+            csv_content = csv_buffer.getvalue()  
+            S3_CLIENT.put_object(Bucket="election-data", 
+                                Key="trusted/" + csv_filenames[i], 
+                                Body=csv_content.encode('utf-8'),
+                                ContentType="text/csv")
             
     spark.stop()
 
