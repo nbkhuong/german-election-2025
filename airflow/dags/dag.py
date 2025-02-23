@@ -1,19 +1,14 @@
 from datetime import datetime, timedelta
-import pandas as pd
 import os
 import json
 import boto3
 import logging
 from dotenv import load_dotenv
 import ast
-from io import StringIO
 
 from airflow import DAG
 from airflow.decorators import task
-from airflow.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator   
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.models import Variable
 
 from scripts.util.retrieve_data import DataRetrieverOverAPI
@@ -50,7 +45,7 @@ with DAG(
 
 
     @task
-    def extract() -> None:
+    def extract_data_from_api():
         # Setup and fetch data entries to retrieve from the api
         dawum_api = DataRetrieverOverAPI(DAWUM_API_URL)
         json_filenames = list(map(lambda x: x + ".json", DATA_ENTRIES))
@@ -78,48 +73,19 @@ with DAG(
         )
 
     @task
-    def transform_request_2():
- 
-        return 0
+    def end_of_pipeline():
 
-    @task
-    def create_table():
-        pg_hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
-        conn = pg_hook.get_conn()
-        cursor = conn.cursor()
-        sql = """
-        create schema if not exists election;
-
-        create table if not exists election.orders (
-            name varchar(255),
-            value integer
-        );
-
-        INSERT INTO election.orders (name, value) 
-        VALUES ('Alice', 100), ('Bob', 200);
-
-        select * from election.orders;
-        """
-        cursor.execute(sql)
-
-        conn.commit()
-
-        rows = cursor.fetchall()
-
-        for row in rows:
-            LOGGER.info(row)
-
-        return "Table created"
+        return ["END OF PIPELINE"]
 
     # Define the tasks
-    spark_job_load_to_landing = spark_job(task_id='spark_job_load_to_landing',  
-                                          spark_job_path='/data/load_to_landing.py', 
+    spark_job_load_to_trusted = spark_job(task_id='spark_job_load_to_trusted',  
+                                          spark_job_path='/data/load_to_trusted.py', 
                                           connection_id=SPARK_CONN_ID)
     
-    spark_job_transform_request_1 = spark_job(task_id='spark_job_transform_request_1',
-                                              spark_job_path='/data/transforms_request_1.py',
-                                              connection_id=SPARK_CONN_ID)
+    spark_job_transforms_to_db_and_curated = spark_job(task_id='spark_job_transforms_to_db_and_curated',
+                                                       spark_job_path='/data/transforms_to_postgres_database.py',
+                                                       connection_id=SPARK_CONN_ID)
 
     # Execute the tasks
-    extract() >> spark_job_load_to_landing >> [spark_job_transform_request_1, transform_request_2()] >> create_table()
+    extract_data_from_api() >> spark_job_load_to_trusted >> spark_job_transforms_to_db_and_curated >> end_of_pipeline()
     

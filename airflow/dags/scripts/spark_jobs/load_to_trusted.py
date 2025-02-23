@@ -7,8 +7,6 @@ import json
 
 import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
-from pyspark.context import SparkContext
-from pyspark.conf import SparkConf
 
 # Load the environment variables
 load_dotenv()

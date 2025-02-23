@@ -5,7 +5,6 @@ import ast
 from io import StringIO
 import pandas as pd
 
-import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -50,8 +49,9 @@ def main():
     for table_name, table_data in tables.items():
         tables[table_name].createOrReplaceTempView(table_name)
         spark.sql(f"select * from {table_name}").show()
-    # Tables:  ['parliaments', 'institutes', 'taskers', 'methods', 'parties', 'surveys']
 
+    # Write data to Postgres DB
+    # Tables:  ['parliaments', 'institutes', 'taskers', 'methods', 'parties', 'surveys']
     spark.sql("""
         CREATE OR REPLACE TEMPORARY VIEW survey_result_by_party_temp AS
         SELECT 
@@ -62,7 +62,7 @@ def main():
             surveys.total_surveyees, 
             parties.party_name, 
             parties.party_shortcut,
-            parliaments.parliament_name
+            parliaments.parliament_shortcut
         FROM surveys
         INNER JOIN parties
         ON surveys.party_id = parties.party_id
@@ -71,6 +71,8 @@ def main():
         
     """)
     result_df = spark.sql("SELECT * FROM survey_result_by_party_temp").toPandas()
+
+    spark.sql("SELECT * FROM survey_result_by_party_temp").show()
 
     pg_hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
     conn = pg_hook.get_conn()
@@ -86,7 +88,7 @@ def main():
                 total_surveyees INTEGER,
                 party_name TEXT,
                 party_shortcut TEXT,
-                parliament_name TEXT
+                parliament_shortcut TEXT
             );
             """
     cursor.execute(sql)
@@ -101,7 +103,7 @@ def main():
             total_surveyees, 
             party_name, 
             party_shortcut,
-            parliament_name
+            parliament_shortcut
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
     cursor.executemany(insert_sql, rows)
@@ -110,6 +112,9 @@ def main():
     conn.close()
     cursor.close()
 
+    # Write data to curated zone
+    S3_CLIENT.put_object(Bucket="election-data", Key="curated/" + "surveys.json", Body=result_df.to_json(orient="records"))
+
     spark.stop()
 
     return 0
@@ -117,3 +122,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
