@@ -64,13 +64,15 @@ def main():
             parties.party_shortcut,
             parliaments.parliament_shortcut
         FROM surveys
-        INNER JOIN parties
+        FULL JOIN parties
         ON surveys.party_id = parties.party_id
-        INNER JOIN parliaments
+        FULL JOIN parliaments
         ON surveys.parliament_id = parliaments.parliament_id
         
     """)
     result_df = spark.sql("SELECT * FROM survey_result_by_party_temp").toPandas()
+
+    result_df.show()
 
     spark.sql("SELECT * FROM survey_result_by_party_temp").show()
 
@@ -122,4 +124,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

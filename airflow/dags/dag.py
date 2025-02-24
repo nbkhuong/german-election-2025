@@ -78,14 +78,14 @@ with DAG(
         return ["END OF PIPELINE"]
 
     # Define the tasks
-    spark_job_load_to_trusted = spark_job(task_id='spark_job_load_to_trusted',  
-                                          spark_job_path='/data/load_to_trusted.py', 
+    load = spark_job(task_id='spark_job_load_to_trusted',  
+                                          spark_job_path='/data/load.py', 
                                           connection_id=SPARK_CONN_ID)
     
-    spark_job_transforms_to_db_and_curated = spark_job(task_id='spark_job_transforms_to_db_and_curated',
-                                                       spark_job_path='/data/transforms_to_postgres_database.py',
+    transform = spark_job(task_id='spark_job_transforms_to_db_and_curated',
+                                                       spark_job_path='/data/transform.py',
                                                        connection_id=SPARK_CONN_ID)
 
     # Execute the tasks
-    extract_data_from_api() >> spark_job_load_to_trusted >> spark_job_transforms_to_db_and_curated >> end_of_pipeline()
+    extract_data_from_api() >> load >> transform >> end_of_pipeline()
     
