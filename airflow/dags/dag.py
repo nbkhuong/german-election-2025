@@ -79,12 +79,12 @@ with DAG(
 
     # Define the tasks
     load = spark_job(task_id='spark_job_load_to_trusted',  
-                                          spark_job_path='/data/load.py', 
-                                          connection_id=SPARK_CONN_ID)
+                     spark_job_path='/data/load.py', 
+                     connection_id=SPARK_CONN_ID)
     
     transform = spark_job(task_id='spark_job_transforms_to_db_and_curated',
-                                                       spark_job_path='/data/transform.py',
-                                                       connection_id=SPARK_CONN_ID)
+                          spark_job_path='/data/transform.py',
+                          connection_id=SPARK_CONN_ID)
 
     # Execute the tasks
     extract_data_from_api() >> load >> transform >> end_of_pipeline()
