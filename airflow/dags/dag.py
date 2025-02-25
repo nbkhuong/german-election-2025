@@ -8,7 +8,7 @@ import ast
 
 from airflow import DAG
 from airflow.decorators import task
-from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator   
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.models import Variable
 
 from scripts.util.retrieve_data import DataRetrieverOverAPI
@@ -72,14 +72,18 @@ with DAG(
             verbose=True
         )
 
+
     @task
     def START():
 
         return ["PIPELINE STARTED"]
+    
+
     @task
     def END():
 
         return ["PIPELINE ENDED"]
+    
 
     # Define the tasks
     load = spark_job(task_id='load',  
