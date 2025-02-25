@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Lakehouse</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #2c3e50;
+            padding: 10px 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header .title {
+            color: white;
+            font-size: 24px;
+        }
+
+        .sidebar-toggle {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            background: #2980b9;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            height: 100vh;
+            width: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #2c3e50;
+            transition: 0.3s;
+            overflow-x: hidden;
+            padding-top: 60px;
+            z-index: 900;
+        }
+
+        .sidebar.active {
+            width: 250px;
+        }
+
+        .sidebar a {
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            color: white;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .sidebar a:hover {
+            background: #34495e;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            padding: 80px 20px 20px;
+            transition: 0.1s;
+        }
+
+        .sidebar.active ~ .main-content {
+            margin-left: 250px;
+        }
+
+        /* Sections */
+        .hero {
+            background: linear-gradient(135deg, #3498db, #8e44ad);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .content-section {
+            margin: 40px 0;
+            padding: 20px;
+            background: #f5f6fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Centering the Iframe */
+        .diagram-container {
+            width: 100%;
+            display: flex;
+            justify-content: center; /* Centers horizontally */
+            align-items: center; /* Centers vertically */
+            flex-direction: column; /* Keeps caption below the iframe */
+            margin: 20px 0;
+        }
+
+        .diagram-container iframe {
+            width: 80%; /* Adjust width as needed */
+            min-height: 460px;
+            max-width: 950px; /* Ensures it doesn't become too wide */
+            border: none;
+            border-radius: 5px;
+            display: block;
+        }
+
+        .diagram-caption {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Image Styling */
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .image-container img {
+            max-width: 100%; /* Scales image to fit container width */
+            height: auto; /* Maintains aspect ratio */
+            max-width: 600px; /* Caps size on large screens */
+            display: block;
+            margin: 0 auto;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            align-items: center;
+        }
+
+        .image-caption {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar.active {
+                width: 200px;
+            }
+            .sidebar.active ~ .main-content {
+                margin-left: 200px;
+            }
+            .header .title {
+                font-size: 18px;
+            }
+            .image-container img {
+                width: 200px; /* Smaller size for mobile */
+            }
+        }
+
+        ul {
+            list-style-type: disc; /* Ensures standard bullet points */
+            padding-left: 40px; /* Adds padding on the left to indent the list items */
+        }
+
+        li {
+            margin-bottom: 8px; /* Adds space between list items */
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Toggle Button -->
+    <div class="header">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰ Menu</button>
+        <div class="title"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <a href="#home">Home</a>
+        <a href="#about">About the Project</a>
+        <a href="#feature_and_fucntionality">Features and Functionality</a>
+        <a href="#technology_used">Technologies Used</a>
+        <a href="#lakehouse_architecture">Lakehouse Architecture</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <h1>Data Lakehouse for Germany's Election 2025</h1>
+            <p>A scalable, efficient, cost-effective and deployment-friendly solution</p>
+        </section>
+
+        <!-- About Section -->
+        <section class="content-section" id="about">
+            <h2>About the Project</h2>
+            <p>This Data Engineering project focuses on building a Data Lakehouse for the Germany Election 2025, 
+                with cost-effective storage, efficient processing, guarantee for reliable election-related data. 
+                The goal is to create a scalable and reliable infrastructure that supports structural and historical 
+                data insights, empowering analysts, journalists, and decision-makers with updated information.</p>
+            <div class="image-container">
+                <img src="datalakehouse.png" alt="Storage Architecture">
+                <div class="image-caption">Figure 1: A Data Lakehouse (AI-generated)</div>
+            </div>
+
+            <br>
+            <p><a href="https://github.com/nbkhuong/german-election-2025" target="_blank">Visit the German Election 2025 GitHub Repository</a> </p>
+        </section>
+
+        <section class="content-section" id="feature_and_fucntionality">
+            <h2>Features and Functionality</h2>
+            <p>
+                The German Election 2025 Data Lakehouse project is a sophisticated, end-to-end data pipeline designed to collect, process, 
+                and store German election survey data (Umfrage) within a scalable lakehouse architecture. Built using Apache Airflow, Apache Spark, 
+                MinIO, and PostgreSQL, orchestrated via Docker Compose, and complemented by a modern web interface, this project offers robust 
+                features and functionality. Below are the key aspects.
+            </p>
+            
+            <br>
+            <h3> Automated Data Pipeline </h3>
+            <p>
+            The pipeline is orchestrated using an Airflow DAG scheduled to run daily. 
+            This automation ensures continuous updates of election survey data without manual intervention. Tasks include data extraction, loading, 
+            transformation, and pipeline status tracking (START/END), providing a structured workflow with clear execution order.
+            </p>
+
+            <br>
+            <h3>On-premise/Locally-hosted Database</h3>
+            <p>
+                Due to budget constraints on storage, an on-premise/local hosting solution has been implemented for the storage layer. 
+                <br> Some of the benefits this system offers include:
+                <ul>
+                    <li>Complete Control Over Data</li>
+                    <li>Security and Privacy</li>
+                    <li>Cost Predictability</li>
+                    <li>Performance</li>
+                    <li>Customization and Flexibility</li>
+                    <li>Data Availability and Redundancy</li>
+                    <li>Regulatory Compliance</li>
+                    <li>Full Data Ownership</li>
+                    <li>Customization for High-Volume Data</li>
+                </ul>
+            </p>
+
+            <br>
+            <h3>Distributed Data Processing</h3>
+            <p>
+                Given the potential volume of incoming data, a distributed processing layer is preferred for efficient and reliable computation. 
+                <br> This has become the de facto standard for any system handling big data, with some key advantages being:
+                <ul>
+                    <li>Scalability</li>
+                    <li>Cost Efficiency</li>
+                    <li>Performance</li>
+                    <li>Flexibility and Adaptability</li>
+                    <li>Efficient Resource Utilization</li>
+                    <li>Potential support for Real-Time Data Processing</li>
+                </ul>
+            </p>
+
+        </section>
+
+        <section class="content-section" id="technology_used">
+            <h2>Technologies Used</h2>
+            <br>
+            <h3>Automated Data Pipeline with Apache Airflow</h3>
+            <p>Apache Airflow's automated data pipeline offers numerous advantages, including efficient orchestration of complex 
+                workflows, task automation, scalability, and flexible scheduling. It reduces manual intervention, 
+                ensures consistent execution through task dependencies, and improves data quality with error 
+                handling and monitoring. Airflow's extensibility allows seamless integration with various systems, 
+                and its modularity ensures reusable, dynamic pipelines. Overall, 
+                it enhances efficiency, reduces errors, ensures consistency, and supports real-time insights, 
+                making it an ideal solution for scalable, reliable data processing.</p>
+            
+            <br>
+            <h3>MinIO as a Scalable Object Store</h3>
+            <p>MinIO as a scalable object store offers high performance, cost-effective, and flexible storage, 
+                making it ideal for cloud-native applications. It provides easy integration with existing 
+                systems using the S3 API, ensuring compatibility with various tools. MinIO supports 
+                high availability, data durability, and fault tolerance, enabling efficient storage 
+                and retrieval of large datasets. With its distributed architecture, MinIO scales 
+                seamlessly as storage needs grow while maintaining low latency, making it a reliable 
+                and scalable solution for modern data storage.</p>
+            <ul>
+                <li><strong>Landing Zone:</strong> Stores raw JSON data from the API.</li>
+                <li><strong>Trusted Zone:</strong> Holds transformed CSV files for structured access.</li>
+                <li><strong>Curated Zone:</strong> Contains enriched JSON files for business purposes.</li>
+            </ul>
+            
+            <br>
+            <h3>Apache Spark as Data Transformation Powerhouse</h3>
+            <p>Apache Spark is a powerful data transformation tool that offers high-speed 
+                processing and scalability for large datasets. It enables efficient data cleaning, 
+                transformation, and analytics through its distributed computing framework.
+                 With support for multiple languages (like Python, Scala, and SQL) and integration 
+                 with a variety of data sources, Spark accelerates complex data processing tasks. 
+                 Its in-memory computing capability ensures faster data processing, making it ideal 
+                 for real-time and batch data analytics, ensuring high performance and flexibility 
+                 or big data workflows.</p>
+            
+            <br>
+            <h3>PostgreSQL for Relational Storage</h3>
+            <p>PostgreSQL is a robust and open-source relational database management system known 
+                for its reliability, flexibility, and scalability. It supports complex queries, 
+                transactions, and data integrity while providing advanced features like full-text 
+                search, JSON support, and data replication. With ACID compliance and strong data 
+                consistency, PostgreSQL ensures reliable storage and management of structured data. 
+                Its extensibility and compatibility with various programming languages and frameworks 
+                make it an ideal choice for handling relational data, whether in small-scale applications 
+                or large enterprise systems.</p>
+            
+            <br>
+            <h3>Docker for Multi-Service Orchestration</h3>
+            <p>Docker Compose simplifies the management of multi-container applications by allowing 
+                developers to define and orchestrate services in a single YAML configuration file. 
+                It enables easy setup, scaling, and orchestration of complex, multi-service environments, 
+                such as databases, web servers, and data pipelines, ensuring consistency across different 
+                development and production environments. Docker Compose improves productivity by 
+                streamlining the process of starting, stopping, and managing multiple interconnected 
+                services, making it an essential tool for efficient deployment and testing of containerized applications.</p>
+            
+            <br>
+            <h3>Tableau for Business Intelligence & Visualization</h3>
+            <p>Tableau is a powerful data visualization tool that allows users to create interactive, 
+                insightful visualizations and dashboards from various data sources. Its intuitive 
+                drag-and-drop interface enables users to transform complex data into clear, 
+                visually appealing charts, graphs, and reports without needing advanced technical skills. 
+                Tableau supports real-time data analysis and provides extensive customization options, 
+                making it a valuable tool for business intelligence, data exploration, and decision-making, 
+                empowering users to uncover trends, patterns, and actionable insights from their data quickly and effectively.</p>
+        </section>
+
+        <!-- Diagram Section -->
+        <section class="content-section" id="lakehouse_architecture">
+            <h2>Lakehouse Architecture</h2>
+            <p>The German Election 2025 Data Lakehouse is a streamlined, automated system designed to collect, process, and store election survey data for analysis. It integrates modern data engineering tools into a cohesive pipeline, structured as a multi-zone lakehouse that balances scalability and queryability. Below is the high-level architecture:</p>
+
+            <div class="diagram-container">
+                <iframe id="diagramFrame" src="lakehouse.html"></iframe>
+                <div class="diagram-caption">Figure 2: Architectural Overview of The Data Lakehouse</div>
+            </div>
+            
+            <br>
+            <h3>Data Ingestion</h3>
+            <p>The pipeline begins by pulling raw election survey data (e.g., parliaments, parties, surveys) from an external API source. This raw data is ingested into the system in its native format, ready for initial storage and subsequent processing.</p>
+            
+            <br>
+            <h3>Orchestration Layer</h3>
+            <p>A workflow management system schedules and coordinates the entire data pipeline, running daily to ensure continuous updates. It oversees the sequence of data ingestion, processing, and storage tasks, providing a reliable and automated framework.</p>
+            
+            <br>
+            <h3>Storage Layer</h3>
+            <p>A scalable object storage system serves as the backbone, organized into three distinct zones:</p>
+            <ul>
+                <li><strong>Landing Zone:</strong> Captures raw, unprocessed data directly from the API.</li>
+                <li><strong>Trusted Zone:</strong> Stores structured, processed data in a format suitable for analysis.</li>
+                <li><strong>Curated Zone:</strong> Holds enriched, segmented datasets tailored for specific use cases.</li>
+            </ul>
+            <p>This tiered structure supports both raw data retention and refined outputs, accessible securely and programmatically.</p>
+            
+            <br>
+            <h3>Data Processing</h3>
+            <p>A distributed processing engine transforms the data in two stages:</p>
+            <ul>
+                <li><strong>Initial Transformation:</strong> Converts raw data from the landing zone into structured, tabular formats, organizing it for efficient storage in the trusted zone.</li>
+                <li><strong>Advanced Transformation:</strong> Combines and enriches data from the trusted zone, producing curated datasets segmented by key attributes and preparing a unified view for relational storage.</li>
+            </ul>
+            <p>This process leverages parallel computing to handle large datasets effectively.</p>
+            
+            <br>
+            <h3>Relational Storage</h3>
+            <p>A relational database complements the object storage by housing a curated, unified dataset that integrates survey results with related details (e.g., parties, parliaments). This enables structured querying and reporting, bridging the unstructured lake with a traditional warehouse approach.</p>
+            
+            <br>
+            <h3>Configuration and Monitoring</h3>
+            <p>Centralized configuration management ensures secure and flexible access to external systems (e.g., API, storage, database). Built-in logging provides visibility into the pipeline’s operations, aiding in monitoring and troubleshooting.</p>
+            
+            <br>
+            <h3>Data Modeling</h3>
+            <p>The data is transformed <strong>from a nested JSON format</strong> into a <strong>dimensional model</strong> suitable for OLAP. In this case, the data is not complicated, so all information is being stored in one table.</p>
+            
+            <br>
+            <p>Why OLAP Model?</p>
+            <ul>
+                <li><strong>Efficient Querying:</strong> Enables fast aggregation and filtering across dimensions.</li>
+                <li><strong>Analytics-Ready:</strong> Supports historical trend analysis, comparisons, and drill-down insights.</li>
+            </ul>
+            <p>This approach ensures structured, flexible, and performant election data analysis. 🚀</p>
+
+            <br>
+            <h3>Data Flow</h3>
+            <p><strong>Ingestion:</strong> External API → Landing Zone (raw data).</p>
+            
+            <br>
+            <p><strong>Processing:</strong></p>
+            <ul>
+                <li>Landing Zone → Trusted Zone (structured data).</li>
+                <li>Trusted Zone → Curated Zone (enriched data) + Relational Database (queryable data).</li>
+            </ul>
+            
+            <br>
+            <h3>Core Characteristics</h3>
+            <ul>
+                <li><strong>Scalability:</strong> The object storage and distributed processing handle growing data volumes.</li>
+                <li><strong>Automation:</strong> Daily scheduling eliminates manual intervention.</li>
+                <li><strong>Flexibility:</strong> Multi-zone storage supports diverse data needs, from raw to refined.</li>
+                <li><strong>Integration:</strong> Combines lakehouse scalability with relational querying.</li>
+            </ul>
+
+            <br>
+            <p>This architecture provides a robust, modern solution for managing and analyzing German election survey data, adaptable to both immediate insights and long-term enhancements.</p>
+            
+            
+        </section>
+
+    </div>
+
+    <script>
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // Smooth scrolling for sidebar links
+        document.querySelectorAll('.sidebar a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = document.querySelector(this.getAttribute('href'));
+                section.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('sidebar').classList.remove('active');
+            });
+        });
+
+        // Adjust iframe height dynamically
+        function adjustIframeHeight() {
+            const iframe = document.getElementById('diagramFrame');
+            if (iframe && iframe.contentWindow.document.body) {
+                iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+            }
+        }
+
+        // Ensure iframe resizes correctly when loaded and on window resize
+        window.addEventListener('load', adjustIframeHeight);
+        window.addEventListener('resize', adjustIframeHeight);
+
+        // Also adjust iframe height when it loads new content
+        document.getElementById('diagramFrame').onload = adjustIframeHeight;
+    </script>
+
+</body>
+</html>
