@@ -35,7 +35,7 @@ def main():
     
     DATA_ENTRIES.remove("database")
     csv_filenames = list(map(lambda x: x + ".csv", DATA_ENTRIES))
-    tables = {}
+    dataframes = {}
 
     for csv_file in csv_filenames:
 
@@ -44,11 +44,29 @@ def main():
         csv_data = response["Body"].read().decode("utf-8")
         df = pd.read_csv(StringIO(csv_data))
         spark_df = spark.createDataFrame(df)
-        tables[csv_file[:-4]] = spark_df
+        dataframes[csv_file[:-4]] = spark_df
     
-    for table_name, table_data in tables.items():
-        tables[table_name].createOrReplaceTempView(table_name)
+
+    for table_name, table_data in dataframes.items():
+        dataframes[table_name].createOrReplaceTempView(table_name)
         spark.sql(f"select * from {table_name}").show()
+
+    # Write data to curated zone
+    survey_df = dataframes['surveys']
+    parliaments_df = dataframes['parliaments']
+    parties_df = dataframes['parties']
+    survey_df = survey_df.join(parliaments_df, on="parliament_id", how="full").join(parties_df, on="party_id", how="full")
+
+    unique_parliament_ids = parliaments_df.select("parliament_id").distinct().rdd.flatMap(lambda x: x).collect()
+    unique_parliament_names = parliaments_df.select("parliament_name").distinct().rdd.flatMap(lambda x: x).collect()
+
+    surveys_by_parliament = []
+    for par_id in unique_parliament_ids:
+        sur_df = survey_df.filter(survey_df.parliament_id == par_id)
+        surveys_by_parliament.append(sur_df)
+
+    for i, s in enumerate(surveys_by_parliament):
+        S3_CLIENT.put_object(Bucket="election-data", Key="curated/" + unique_parliament_names[i] + ".json", Body=s.toPandas().to_json(orient="records"))
 
     # Write data to Postgres DB
     # Tables:  ['parliaments', 'institutes', 'taskers', 'methods', 'parties', 'surveys']
@@ -68,13 +86,10 @@ def main():
         ON surveys.party_id = parties.party_id
         FULL JOIN parliaments
         ON surveys.parliament_id = parliaments.parliament_id
-        
     """)
     result_df = spark.sql("SELECT * FROM survey_result_by_party_temp").toPandas()
 
-    result_df.show()
-
-    spark.sql("SELECT * FROM survey_result_by_party_temp").show()
+    #spark.sql("SELECT * FROM survey_result_by_party_temp").show()
 
     pg_hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
     conn = pg_hook.get_conn()
@@ -113,9 +128,6 @@ def main():
     conn.commit()
     conn.close()
     cursor.close()
-
-    # Write data to curated zone
-    S3_CLIENT.put_object(Bucket="election-data", Key="curated/" + "surveys.json", Body=result_df.to_json(orient="records"))
 
     spark.stop()
 

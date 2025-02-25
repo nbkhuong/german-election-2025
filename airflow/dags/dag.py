@@ -45,7 +45,7 @@ with DAG(
 
 
     @task
-    def extract_data_from_api():
+    def extract():
         # Setup and fetch data entries to retrieve from the api
         dawum_api = DataRetrieverOverAPI(DAWUM_API_URL)
         json_filenames = list(map(lambda x: x + ".json", DATA_ENTRIES))
@@ -53,7 +53,7 @@ with DAG(
     
         # Write data to minio's bucket
         for i, data_entry in enumerate(data_entries):
-            data = json.dumps(dawum_api.data[data_entry], indent=4)   
+            data = json.dumps(dawum_api.data[data_entry], indent=4)
             S3_CLIENT.put_object(Bucket="election-data", Key="landing/" + json_filenames[i], Body=data)
 
         print(os.environ)
@@ -73,19 +73,23 @@ with DAG(
         )
 
     @task
-    def end_of_pipeline():
+    def START():
 
-        return ["END OF PIPELINE"]
+        return ["PIPELINE STARTED"]
+    @task
+    def END():
+
+        return ["PIPELINE ENDED"]
 
     # Define the tasks
-    load = spark_job(task_id='spark_job_load_to_trusted',  
+    load = spark_job(task_id='load',  
                      spark_job_path='/data/load.py', 
                      connection_id=SPARK_CONN_ID)
     
-    transform = spark_job(task_id='spark_job_transforms_to_db_and_curated',
+    transform = spark_job(task_id='transform',
                           spark_job_path='/data/transform.py',
                           connection_id=SPARK_CONN_ID)
 
     # Execute the tasks
-    extract_data_from_api() >> load >> transform >> end_of_pipeline()
+    START() >> extract() >> load >> transform >> END()
     

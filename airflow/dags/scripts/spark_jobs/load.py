@@ -100,39 +100,40 @@ def main():
                                     Key="landing/" + "surveys.json")
     data_surveys = response['Body'].read()
     json_data_surveys = json.loads(data_surveys.decode('utf-8'))
-    rdd_surveys = spark.sparkContext.parallelize(json_data_surveys.items())
-    df_surveys = rdd_surveys.map(lambda x: (x[0], 
-                                    x[1]["Parliament_ID"],
-                                    x[1]["Institute_ID"],
-                                    x[1]["Tasker_ID"],
-                                    x[1]["Method_ID"],
-                                    x[1]["Date"], 
-                                    x[1]["Survey_Period"]["Date_Start"], 
-                                    x[1]["Survey_Period"]["Date_End"],
-                                    x[1]["Surveyed_Persons"],
-                                    x[1]["Results"])) \
-                        .toDF(["survey_id", 
-                               "parliament_id",
-                               "institute_id",
-                               "tasker_id",
-                               "method_id",
-                               "survey_publish_date",
-                               "survey_start_date", 
-                               "survey_end_date",
-                               "total_surveyees",
-                               "results"])
+    df = []
+    for key, value in json_data_surveys.items():
+        row = {'survey_id': key}
+        for k, v in value.items():
+            if k == "Results":
+                for party_id, result in v.items():
+                    row['party_id'] = party_id
+                    row['survey_result_by_percent'] = float(result)
+                    row['survey_publish_date'] = value['Date']
+                    row['institute_id'] = int(value['Institute_ID'])
+                    row['parliament_id'] = int(value['Parliament_ID'])
+                    row['method_id'] = int(value['Method_ID'])
+                    row['survey_start_date'] = value['Survey_Period']['Date_Start']
+                    row['survey_end_date'] = value['Survey_Period']['Date_End']
+                    row['total_surveyees'] = int(value['Surveyed_Persons'])
+                    row['tasker_id'] = int(value['Tasker_ID'])
+                    
+                    df.append(row)
+                    row = {'survey_id': key}
+
+    df_surveys = spark.createDataFrame(spark.sparkContext.parallelize(df))
+
     df_surveys = df_surveys.select(F.col("survey_id"), 
-                                F.col("parliament_id"),
+                                F.col("party_id"), 
                                 F.col("institute_id"),
-                                F.col("tasker_id"),
+                                F.col("parliament_id"),
                                 F.col("method_id"),
-                                F.explode(df_surveys.results).alias("party_id", "survey_result_by_percent"),
+                                F.col("tasker_id"),
+                                F.col("survey_result_by_percent"),
                                 F.col("survey_publish_date"),
                                 F.col("survey_start_date"), 
                                 F.col("survey_end_date"),
                                 F.col("total_surveyees") 
                                 )
-    df_surveys = df_surveys.fillna({"survey_result_by_percent": 0})
     df_surveys.show()
     write_to_minio_bucket(df_surveys, StringIO(), "surveys.csv")
             
