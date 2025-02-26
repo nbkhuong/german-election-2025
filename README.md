@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-The **German Election 2025 Data Pipeline** project is designed to collect, process, and analyze survey data related to the 2025 German federal elections. Utilizing a combination of Docker, Apache Spark, Apache Airflow, and PostgreSQL, this project establishes an efficient Extract, Transform, Load (ETL) pipeline. The architecture ensures seamless data ingestion, transformation, and storage, facilitating comprehensive analysis and visualization of election survey results.
+The **German Election 2025 Data Pipeline** project is designed to collect, process, and analyze survey data related to the 2025 German federal elections. Utilizing a combination of Docker, Apache Spark, Apache Airflow, and PostgreSQL, this project establishes an efficient Extract, Transform, Load (ETL) pipeline. The architecture ensures seamless data ingestion, transformation, and storage, facilitating comprehensive analysis and visualization of election survey results. For more details about the architecture, please visit: [https://nbkhuong.github.io/german-election-2025/](). 
 
 ![1740532485666](image/README/1740532485666.png)
 
