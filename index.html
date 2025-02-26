@@ -155,6 +155,44 @@
             margin-top: 10px;
         }
 
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 columns */
+            gap: 10px; /* Spacing between grid items */
+            padding: 10px;
+            background-color: lightgray;
+        }
+
+        .grid-item {
+            background-color: white;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid black;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Pushes caption to bottom */
+            align-items: center;
+            height: 100%; /* Ensures equal height for all grid items */
+        }
+
+        .grid-item img {
+            width: 100%; /* Makes images responsive */
+            height: auto; /* Keeps aspect ratio */
+            border-radius: 8px; /* Optional: adds rounded corners */
+        }
+
+        .grid-caption {
+            margin-top: auto; /* Pushes the caption to the bottom */
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.1); /* Light background for better visibility */
+            border-radius: 0 0 8px 8px; /* Rounds only bottom corners */
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar.active {
@@ -212,13 +250,39 @@
                 with cost-effective storage, efficient processing, guarantee for reliable election-related data. 
                 The goal is to create a scalable and reliable infrastructure that supports structural and historical 
                 data insights, empowering analysts, journalists, and decision-makers with updated information.</p>
-            <div class="image-container">
+            <!-- <div class="image-container">
                 <img src="./website/datalakehouse.png" alt="Storage Architecture">
                 <div class="image-caption">Figure 1: If data lakehouse is real :D </div>
+            </div> -->
+            <div class="diagram-container">
+                <iframe id="diagramFrame" src="./website/lakehouse.html"></iframe>
+                <div class="diagram-caption">Figure 1: The Data Lakehouse for Election Data</div>
             </div>
-
             <br>
             <p><a href="https://github.com/nbkhuong/german-election-2025" target="_blank">Visit the German Election 2025 GitHub Repository</a> </p>
+        </section>
+
+        <section class="content-section" id="demo">
+            <h2>Some Screenshots from the Running Lakehouse 🚀</h2>
+            <br>
+            <div class="grid-container">
+                <div class="grid-item">
+                    <img src="./website/airflow_in_action.png" alt="Image 1">
+                    <p class="grid-caption">Airflow in Action</p>
+                </div>
+                <div class="grid-item">
+                    <img src="./website/tableau_in_action.png" alt="Image 4">
+                    <p class="grid-caption">Tableau in Action</p>
+                </div>
+                <div class="grid-item">
+                    <img src="./website/minio_in_action.png" alt="Image 2">
+                    <p class="grid-caption">Minio in Action</p>
+                </div>
+                <div class="grid-item">
+                    <img src="./website/spark_in_action.png" alt="Image 3">
+                    <p class="grid-caption">Spark in Action</p>
+                </div>
+            </div>
         </section>
 
         <section class="content-section" id="feature_and_fucntionality">
@@ -437,6 +501,7 @@
             
         </section>
 
+        
     </div>
 
     <script>
